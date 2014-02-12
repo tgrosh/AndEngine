@@ -25,12 +25,14 @@ public class SmoothCamera extends ZoomCamera {
 	protected float mTargetCenterY;
 
 	protected float mTargetZoomFactor;
+	
+	protected boolean mEasingEnabled = true;
 
 	// ===========================================================
 	// Constructors
 	// ===========================================================
 
-	public SmoothCamera(final float pX, final float pY, final float pWidth, final float pHeight, final float pMaxVelocityX, final float pMaxVelocityY, final float pMaxZoomFactorChange) {
+	public SmoothCamera(final float pX, final float pY, final float pWidth, final float pHeight, final float pMaxVelocityX, final float pMaxVelocityY, final float pMaxZoomFactorChange, boolean pEasingEnabled) {
 		super(pX, pY, pWidth, pHeight);
 		this.mMaxVelocityX = pMaxVelocityX;
 		this.mMaxVelocityY = pMaxVelocityY;
@@ -40,11 +42,21 @@ public class SmoothCamera extends ZoomCamera {
 		this.mTargetCenterY = this.getCenterY();
 
 		this.mTargetZoomFactor = 1.0f;
+		
+		this.mEasingEnabled = pEasingEnabled;
 	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
+
+	public boolean ismEasingEnabled() {
+		return mEasingEnabled;
+	}
+
+	public void setEasingEnabled(boolean pEasingEnabled) {
+		this.mEasingEnabled = pEasingEnabled;
+	}
 
 	public float getTargetCenterX() {
 		return this.mTargetCenterX;
@@ -148,11 +160,18 @@ public class SmoothCamera extends ZoomCamera {
 
 		if(currentCenterX != targetCenterX || currentCenterY != targetCenterY) {
 			final float diffX = targetCenterX - currentCenterX;
-			final float dX = this.limitToMaxVelocityX(diffX, pSecondsElapsed);
-
 			final float diffY = targetCenterY - currentCenterY;
-			final float dY = this.limitToMaxVelocityY(diffY, pSecondsElapsed);
-
+			float dX = 0;
+			float dY = 0;
+			
+			if (mEasingEnabled){
+				dX = ((targetCenterX - currentCenterX) / 2) * (pSecondsElapsed / .25f);
+				dY = ((targetCenterY - currentCenterY) / 2) * (pSecondsElapsed / .25f);
+			}
+			else{
+				dX = this.limitToMaxVelocityX(diffX, pSecondsElapsed);
+				dY = this.limitToMaxVelocityY(diffY, pSecondsElapsed);
+			}
 			super.setCenter(currentCenterX + dX, currentCenterY + dY);
 		}
 
@@ -162,7 +181,10 @@ public class SmoothCamera extends ZoomCamera {
 		final float targetZoomFactor = this.mTargetZoomFactor;
 
 		if(currentZoom != targetZoomFactor) {
-			final float absoluteZoomDifference = targetZoomFactor - currentZoom;
+			float absoluteZoomDifference = targetZoomFactor - currentZoom;
+			if (mEasingEnabled){
+				absoluteZoomDifference = absoluteZoomDifference * .25f;
+			}
 			final float zoomChange = this.limitToMaxZoomFactorChange(absoluteZoomDifference, pSecondsElapsed);
 			super.setZoomFactor(currentZoom + zoomChange);
 
@@ -172,7 +194,7 @@ public class SmoothCamera extends ZoomCamera {
 		}
 	}
 
-	private float limitToMaxVelocityX(final float pValue, final float pSecondsElapsed) {
+	protected float limitToMaxVelocityX(final float pValue, final float pSecondsElapsed) {
 		if(pValue > 0) {
 			return Math.min(pValue, this.mMaxVelocityX * pSecondsElapsed);
 		} else {
@@ -180,7 +202,7 @@ public class SmoothCamera extends ZoomCamera {
 		}
 	}
 
-	private float limitToMaxVelocityY(final float pValue, final float pSecondsElapsed) {
+	protected float limitToMaxVelocityY(final float pValue, final float pSecondsElapsed) {
 		if(pValue > 0) {
 			return Math.min(pValue, this.mMaxVelocityY * pSecondsElapsed);
 		} else {
@@ -188,7 +210,7 @@ public class SmoothCamera extends ZoomCamera {
 		}
 	}
 
-	private float limitToMaxZoomFactorChange(final float pValue, final float pSecondsElapsed) {
+	protected float limitToMaxZoomFactorChange(final float pValue, final float pSecondsElapsed) {
 		if(pValue > 0) {
 			return Math.min(pValue, this.mMaxZoomFactorChange * pSecondsElapsed);
 		} else {
