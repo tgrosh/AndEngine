@@ -24,7 +24,9 @@ public abstract class BaseAudioEntity implements IAudioEntity {
 	protected float mRightVolume = 1.0f;
 
 	private boolean mReleased;
-
+	private boolean paused = false;
+	private boolean stopped = true;
+	private boolean playing = false;
 	// ===========================================================
 	// Constructors
 	// ===========================================================
@@ -41,6 +43,17 @@ public abstract class BaseAudioEntity implements IAudioEntity {
 		return this.mReleased;
 	}
 
+	public boolean isPaused() {
+		return paused;
+	}
+	public boolean isStopped() {
+		return stopped;
+	}
+	public boolean isPlaying() {
+		return playing;
+	}
+	
+	
 	protected IAudioManager<? extends IAudioEntity> getAudioManager() throws AudioException {
 		this.assertNotReleased();
 
@@ -115,21 +128,37 @@ public abstract class BaseAudioEntity implements IAudioEntity {
 	@Override
 	public void play() throws AudioException {
 		this.assertNotReleased();
+		
+		this.playing = true;
+		this.paused = false;
+		this.stopped = false;
 	}
 
 	@Override
 	public void pause() throws AudioException {
 		this.assertNotReleased();
+		
+		this.playing = false;
+		this.paused = true;
+		this.stopped = false;
 	}
 
 	@Override
 	public void resume() throws AudioException {
 		this.assertNotReleased();
+		
+		this.playing = true;
+		this.paused = false;
+		this.stopped = false;
 	}
 
 	@Override
 	public void stop() throws AudioException {
 		this.assertNotReleased();
+		
+		this.playing = false;
+		this.paused = false;
+		this.stopped = true;
 	}
 
 	@Override
@@ -142,6 +171,9 @@ public abstract class BaseAudioEntity implements IAudioEntity {
 		this.assertNotReleased();
 
 		this.mReleased = true;
+		this.playing = false;
+		this.paused = false;
+		this.stopped = false;
 	}
 
 	// ===========================================================
